@@ -1,12 +1,14 @@
 # Bilibili YouTube-style Volume
 
-[繁體中文](README.md) · [简体中文](README.zh-CN.md) · **English**
+[繁體中文](https://github.com/TW527E/bilibili-youtube-volume/blob/main/README.md) · [简体中文](https://github.com/TW527E/bilibili-youtube-volume/blob/main/README.zh-CN.md) · **English**
 
 A userscript that moves Bilibili's volume control to the left and reveals a horizontal slider to its right on hover. Includes wheel adjustment, fine control at low volumes, and optional volume balancing.
 
 **Current version: 1.3.1** · [Install script](https://raw.githubusercontent.com/TW527E/bilibili-youtube-volume/main/bilibili-youtube-volume.user.js) · [Report an issue](https://github.com/TW527E/bilibili-youtube-volume/issues)
 
 ## Install and update
+
+You can also install from [GreasyFork](https://greasyfork.org/scripts/602247). GreasyFork periodically synchronizes the script and its description from this repository's `main` branch; updates may not appear immediately after a push. Install from one source to avoid duplicate active copies.
 
 1. Install [Tampermonkey](https://www.tampermonkey.net/) or a compatible userscript manager in your desktop browser.
 2. Open the installation link above and confirm installation in the manager.
@@ -70,10 +72,10 @@ node --check bilibili-youtube-volume.user.js
 node tests/audio.test.cjs
 ```
 
-See [tests/README.md](tests/README.md) for browser checks covering the volume curve, wheel input, mute, audio routing, category defaults, rebuilt settings, and themes. Synthetic audio checks are not a substitute for listening calibration.
+See [tests/README.md](https://github.com/TW527E/bilibili-youtube-volume/blob/main/tests/README.md) for browser checks covering the volume curve, wheel input, mute, audio routing, category defaults, rebuilt settings, and themes. Synthetic audio checks are not a substitute for listening calibration.
 
 ## References and license
 
 This is an independent implementation. The user-supplied [Bilibili 视频音量均衡器](https://greasyfork.org/scripts/557295) by Timothy Tao & Github Copilot (MIT) was used for behavior comparison while tuning loudness; that script was not incorporated directly.
 
-[MIT License](LICENSE). Not affiliated with Bilibili or YouTube.
+[MIT License](https://github.com/TW527E/bilibili-youtube-volume/blob/main/LICENSE). Not affiliated with Bilibili or YouTube.
