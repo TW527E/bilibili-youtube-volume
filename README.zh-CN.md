@@ -1,12 +1,14 @@
 # Bilibili YouTube 样式音量条
 
-[繁體中文](README.md) · **简体中文** · [English](README.en.md)
+[繁體中文](https://github.com/TW527E/bilibili-youtube-volume/blob/main/README.md) · **简体中文** · [English](https://github.com/TW527E/bilibili-youtube-volume/blob/main/README.en.md)
 
 将 Bilibili 音量控制移到左侧，鼠标移入时向右展开水平音量条，并提供滚轮调整、细致的低音量控制与可选的音量平衡。
 
 **当前版本：1.3.1** · [安装脚本](https://raw.githubusercontent.com/TW527E/bilibili-youtube-volume/main/bilibili-youtube-volume.user.js) · [反馈问题](https://github.com/TW527E/bilibili-youtube-volume/issues)
 
 ## 安装与更新
+
+也可从 [GreasyFork](https://greasyfork.org/scripts/602247) 安装。GreasyFork 已设置从本仓库的 `main` 分支定时自动同步脚本与说明；更新不一定在推送后立即出现。请选择一个来源安装，避免重复启用。
 
 1. 在桌面浏览器安装 [Tampermonkey](https://www.tampermonkey.net/) 或兼容的用户脚本管理器。
 2. 点击上方“安装脚本”，在管理器中确认安装。
@@ -70,10 +72,10 @@ node --check bilibili-youtube-volume.user.js
 node tests/audio.test.cjs
 ```
 
-浏览器检查方式见 [tests/README.md](tests/README.md)。测试包含音量刻度、滚轮、静音、音频路由、分区默认设置、设置重建及主题配色。合成音频检查不等同于实际听感校准。
+浏览器检查方式见 [tests/README.md](https://github.com/TW527E/bilibili-youtube-volume/blob/main/tests/README.md)。测试包含音量刻度、滚轮、静音、音频路由、分区默认设置、设置重建及主题配色。合成音频检查不等同于实际听感校准。
 
 ## 参考与许可
 
 本项目为独立实现。音量平衡调校曾参考用户提供的 [Bilibili 视频音量均衡器](https://greasyfork.org/scripts/557295)（Timothy Tao & Github Copilot，MIT）进行行为比较；没有直接合并该脚本。
 
-[MIT License](LICENSE) · 与 Bilibili、YouTube 无隶属关系。
+[MIT License](https://github.com/TW527E/bilibili-youtube-volume/blob/main/LICENSE) · 与 Bilibili、YouTube 无隶属关系。
