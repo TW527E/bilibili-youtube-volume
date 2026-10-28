@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili YouTube 樣式音量條
 // @namespace    local.bilibili-youtube-volume
-// @version      1.4.0
+// @version      1.4.1
 // @description  將音量移到左側，向右展開加長音量條，支援滾輪、觸控板雙指無級調整與聽感刻度，附音量平衡。
 // @match        https://www.bilibili.com/*
 // @match        https://player.bilibili.com/*
@@ -18,7 +18,7 @@
 (() => {
   'use strict';
   if (window.__biliYtVolumeVersion) return;
-  window.__biliYtVolumeVersion = '1.4.0';
+  window.__biliYtVolumeVersion = '1.4.1';
   // The processor runs on the audio thread, including when the tab is in the background.
   function balanceModule() {
     class BalanceProcessor extends AudioWorkletProcessor {
@@ -529,12 +529,16 @@
       group.addEventListener('wheel', event => {
         const scale = event.deltaMode === 1 ? 5 / 3 : event.deltaMode === 2 ? 5 : 0.05;
         const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : -event.deltaY;
+        // shortcut: 沒有反向標記時，Mac 像素滑動按預設自然捲動處理；非預設方向需再校準。
+        const inverted = typeof event.webkitDirectionInvertedFromDevice === 'boolean'
+          ? event.webkitDirectionInvertedFromDevice
+          : event.deltaMode === 0 && /Mac/.test(navigator.platform);
         if (event.ctrlKey || event.shiftKey || !delta) return;
         sync();
         if (input.disabled) return;
         event.preventDefault();
         event.stopImmediatePropagation();
-        input.value = String(Math.max(0, Math.min(100, input.valueAsNumber + delta * scale)));
+        input.value = String(Math.max(0, Math.min(100, input.valueAsNumber + delta * scale * (inverted ? -1 : 1))));
         setVolume();
       }, { capture: true, passive: false });
       // 原生按鈕會把極低音量當成零；以 muted 切換，保留未捨入的音量。

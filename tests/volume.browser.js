@@ -13,6 +13,7 @@ async function selfTest(source) {
   const settle = () => new Promise(resolve => setTimeout(resolve, 1100));
   const controls = `<div class="bpx-player-control-bottom-left"><button>Play</button><div class="bpx-player-ctrl-time">0:00</div></div><div class="bpx-player-control-bottom-right"><div class="bpx-player-ctrl-volume" tabindex="0"><span>Mute</span><div class="bpx-player-ctrl-volume-box">Native slider</div></div></div>`;
   try {
+    Object.defineProperty(win.navigator, 'platform', { configurable: true, value: 'Linux x86_64' });
     win.eval(source);
     win.eval(source);
     check(doc.querySelectorAll('#bili-yt-volume-style').length === 1, 'Repeated injection is harmless');
@@ -46,6 +47,7 @@ async function selfTest(source) {
     let previous = -1;
     const wheel = (target, deltaY, extra = {}) => {
       const event = new win.WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY, ...extra });
+      Object.defineProperty(event, 'webkitDirectionInvertedFromDevice', { value: extra.inverted });
       target.dispatchEvent(event);
       return event;
     };
@@ -132,6 +134,27 @@ async function selfTest(source) {
     check(at(0) && video.volume === 0, 'Large gestures clamp at zero');
     wheel(input, -.25);
     check(at(.0125), 'A small reversal responds immediately after the lower boundary');
+    Object.defineProperty(win.navigator, 'platform', { configurable: true, value: 'MacIntel' });
+    const reset = () => { input.value = '50'; input.dispatchEvent(new win.Event('input')); };
+    for (const [deltaY, deltaX, expected, name] of [[10,0,50.5,'up'],[-10,0,49.5,'down'],[0,-10,50.5,'right'],[0,10,49.5,'left']]) {
+      reset(); wheel(input, deltaY, {deltaX});
+      check(at(expected), 'Mac natural-scrolling fallback: physical ' + name);
+      reset(); wheel(input, deltaY, {deltaX, inverted:true});
+      check(at(expected), 'Explicit natural-scrolling flag: physical ' + name);
+    }
+    reset(); wheel(input, -.25, {inverted:false});
+    check(at(50.0125), 'Explicit non-inverted flag takes priority over the Mac fallback');
+    reset(); for(let i=0;i<100;i++) wheel(input, .1);
+    check(at(50.5), 'Mac natural scrolling preserves fractional event accumulation');
+    reset(); wheel(input, -3, {deltaMode:1});
+    check(at(55), 'Mac fallback does not reverse line-mode mouse wheels');
+    reset(); wheel(input, -1, {deltaMode:2});
+    check(at(55), 'Mac fallback does not reverse page-mode wheels');
+    reset(); wheel(input, 10, {ctrlKey:true});
+    check(at(50), 'Mac pinch/zoom gesture remains untouched');
+    Object.defineProperty(win.navigator, 'platform', { configurable: true, value: 'Linux x86_64' });
+    reset(); wheel(input, 10, {inverted:true});
+    check(at(50.5), 'Explicit inverted flag works independently of platform');
     video.remove();
     event = wheel(input, -100);
     check(!event.defaultPrevented && input.disabled, 'Missing media does not trap wheel scrolling');

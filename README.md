@@ -4,7 +4,7 @@
 
 將 Bilibili 音量控制移到左側，滑鼠移入時向右展開水平音量條，並提供滾輪與觸控板雙指無級調整、細緻的低音量控制與可選的音量平衡。
 
-**目前版本：1.4.0** · [安裝腳本](https://raw.githubusercontent.com/TW527E/bilibili-youtube-volume/main/bilibili-youtube-volume.user.js) · [回報問題](https://github.com/TW527E/bilibili-youtube-volume/issues)
+**目前版本：1.4.1** · [安裝腳本](https://raw.githubusercontent.com/TW527E/bilibili-youtube-volume/main/bilibili-youtube-volume.user.js) · [回報問題](https://github.com/TW527E/bilibili-youtube-volume/issues)
 
 ## 安裝與更新
 
@@ -26,7 +26,7 @@
 | 點擊音量圖示 | 靜音／恢復，保留細微的低音量設定 |
 | 鍵盤聚焦音量條 | 使用原生滑桿的方向鍵、Home、End 操作 |
 
-雙指滑動會保留小數位移，滑桿與音量可連續變化，不會每個事件都跳 5%。同樣的總移動距離，即使拆成很多微小事件，調整幅度仍一致。滑動方向以瀏覽器回報的方向為準，會受自然捲動設定影響。
+雙指滑動會保留小數位移，滑桿與音量可連續變化，不會每個事件都跳 5%。同樣的總移動距離，即使拆成很多微小事件，調整幅度仍一致。優先依瀏覽器提供的自然捲動反向標記修正方向；沒有標記時，Mac 的像素滑動按預設自然捲動處理。若在 Mac 關閉自然捲動，且瀏覽器未提供標記，方向仍可能需要校準。
 
 調音量時不捲動頁面；Ctrl 與 Shift 組合手勢不會被攔截。靜音時向增加方向滑動，從 0 依位移量增加；向減少方向滑動不會解除靜音。
 
@@ -72,6 +72,7 @@
 ```sh
 node --check bilibili-youtube-volume.user.js
 node tests/audio.test.cjs
+node tests/wheel.test.cjs
 ```
 
 瀏覽器檢查方式見 [tests/README.md](https://github.com/TW527E/bilibili-youtube-volume/blob/main/tests/README.md)。測試包含音量刻度、滾輪、靜音、音訊路由、分區預設、設定重建及主題配色。合成音訊檢查不等同於實際聽感校準。
