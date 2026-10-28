@@ -2,9 +2,9 @@
 
 [繁體中文](https://github.com/TW527E/bilibili-youtube-volume/blob/main/README.md) · [简体中文](https://github.com/TW527E/bilibili-youtube-volume/blob/main/README.zh-CN.md) · **English**
 
-A userscript that moves Bilibili's volume control to the left and reveals a horizontal slider to its right on hover. Includes wheel adjustment, fine control at low volumes, and optional volume balancing.
+A userscript that moves Bilibili's volume control to the left and reveals a horizontal slider to its right on hover. Includes wheel and continuous two-finger trackpad adjustment, fine control at low volumes, and optional volume balancing.
 
-**Current version: 1.3.1** · [Install script](https://raw.githubusercontent.com/TW527E/bilibili-youtube-volume/main/bilibili-youtube-volume.user.js) · [Report an issue](https://github.com/TW527E/bilibili-youtube-volume/issues)
+**Current version: 1.4.0** · [Install script](https://raw.githubusercontent.com/TW527E/bilibili-youtube-volume/main/bilibili-youtube-volume.user.js) · [Report an issue](https://github.com/TW527E/bilibili-youtube-volume/issues)
 
 ## Install and update
 
@@ -22,11 +22,13 @@ If the link displays source code, create a script in your manager, paste the ent
 | --- | --- |
 | Hover over the volume icon on the left | Reveals a 108px slider between the play button and the time display |
 | Drag the slider | Uses a cubic approximation to a perceptual scale; 50% corresponds to 12.5% media gain |
-| Scroll over the icon or slider | Up increases and down decreases volume by 5 percentage points per vertical wheel event |
+| Scroll or use two fingers over the icon or slider | Right/up increases and left/down decreases volume continuously in proportion to travel |
 | Click the volume icon | Mutes or restores sound while retaining precise low-volume settings |
 | Focus the slider with the keyboard | Uses the native range input's arrow keys, Home, and End |
 
-Volume scrolling does not scroll the page. Ctrl, Shift, and predominantly horizontal scrolling are left alone. Scrolling up from mute starts at a displayed 5%; scrolling down does not unmute. High-frequency trackpad events may change the volume quickly.
+Fractional trackpad deltas move both the slider and gain continuously instead of jumping 5% per event. Equal total travel produces the same adjustment even when split into many tiny events. Directions follow the deltas reported by your browser and can be affected by natural-scrolling settings.
+
+Volume scrolling does not scroll the page. Ctrl and Shift gestures are left alone. Increasing from mute starts at zero and follows the gesture distance; decreasing does not unmute.
 
 The scale is neither a live audio waveform nor a sound-pressure measurement.
 

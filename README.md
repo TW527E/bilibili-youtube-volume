@@ -2,9 +2,9 @@
 
 **繁體中文** · [简体中文](https://github.com/TW527E/bilibili-youtube-volume/blob/main/README.zh-CN.md) · [English](https://github.com/TW527E/bilibili-youtube-volume/blob/main/README.en.md)
 
-將 Bilibili 音量控制移到左側，滑鼠移入時向右展開水平音量條，並提供滾輪調整、細緻的低音量控制與可選的音量平衡。
+將 Bilibili 音量控制移到左側，滑鼠移入時向右展開水平音量條，並提供滾輪與觸控板雙指無級調整、細緻的低音量控制與可選的音量平衡。
 
-**目前版本：1.3.1** · [安裝腳本](https://raw.githubusercontent.com/TW527E/bilibili-youtube-volume/main/bilibili-youtube-volume.user.js) · [回報問題](https://github.com/TW527E/bilibili-youtube-volume/issues)
+**目前版本：1.4.0** · [安裝腳本](https://raw.githubusercontent.com/TW527E/bilibili-youtube-volume/main/bilibili-youtube-volume.user.js) · [回報問題](https://github.com/TW527E/bilibili-youtube-volume/issues)
 
 ## 安裝與更新
 
@@ -22,11 +22,13 @@
 | --- | --- |
 | 滑鼠移到左側音量圖示 | 在播放按鈕後、時間前，向右展開 108px 音量條 |
 | 拖曳音量條 | 使用三次方聽感近似刻度；50% 刻度對應 12.5% 媒體增益 |
-| 在音量圖示或音量條上滾動 | 向上增加、向下減少，每個垂直滾輪事件調整 5 個百分點 |
+| 在音量圖示或音量條上雙指滑動／滾動 | 向右／向上增加、向左／向下減少；依位移量連續調整 |
 | 點擊音量圖示 | 靜音／恢復，保留細微的低音量設定 |
 | 鍵盤聚焦音量條 | 使用原生滑桿的方向鍵、Home、End 操作 |
 
-調音量時不捲動頁面；Ctrl、Shift 與以水平為主的滾動不會被攔截。靜音時往上滾從顯示的 5% 開始，往下滾不會解除靜音。高頻觸控板事件可能讓調整較快。
+雙指滑動會保留小數位移，滑桿與音量可連續變化，不會每個事件都跳 5%。同樣的總移動距離，即使拆成很多微小事件，調整幅度仍一致。滑動方向以瀏覽器回報的方向為準，會受自然捲動設定影響。
+
+調音量時不捲動頁面；Ctrl 與 Shift 組合手勢不會被攔截。靜音時向增加方向滑動，從 0 依位移量增加；向減少方向滑動不會解除靜音。
 
 此刻度不是即時音訊波形，也不是實際聲壓量測。
 

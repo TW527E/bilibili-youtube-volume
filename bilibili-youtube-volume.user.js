@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Bilibili YouTube 樣式音量條
 // @namespace    local.bilibili-youtube-volume
-// @version      1.3.1
-// @description  將音量移到左側，向右展開加長音量條，支援滾輪與非線性聽感刻度，附音量平衡。
+// @version      1.4.0
+// @description  將音量移到左側，向右展開加長音量條，支援滾輪、觸控板雙指無級調整與聽感刻度，附音量平衡。
 // @match        https://www.bilibili.com/*
 // @match        https://player.bilibili.com/*
 // @grant        none
@@ -18,7 +18,7 @@
 (() => {
   'use strict';
   if (window.__biliYtVolumeVersion) return;
-  window.__biliYtVolumeVersion = '1.3.1';
+  window.__biliYtVolumeVersion = '1.4.0';
   // The processor runs on the audio thread, including when the tab is in the background.
   function balanceModule() {
     class BalanceProcessor extends AudioWorkletProcessor {
@@ -496,9 +496,9 @@
       input.type = 'range';
       input.min = '0';
       input.max = '100';
-      input.step = '1';
+      input.step = 'any';
       input.setAttribute('aria-label', '音量');
-      group.title = '滾輪調整音量（每次 5%）';
+      group.title = '滾輪或雙指滑動調整音量（向右／向上增加）';
       rail.append(input);
       group.append(rail);
 
@@ -511,10 +511,10 @@
         if (input.disabled) return;
         if (video.volume > 0) lastVolume = video.volume;
         group.dataset.muted = String(video.muted || video.volume === 0);
-        // 先反算聽感刻度再取整，避免低音量被線性百分比捨入成零。
-        const value = video.muted ? 0 : Math.round(Math.cbrt(video.volume) * 100);
+        // 保留聽感刻度的小數，讓高精度觸控板事件不被每次取整吃掉。
+        const value = video.muted ? 0 : Math.cbrt(video.volume) * 100;
         input.value = String(value);
-        input.setAttribute('aria-valuetext', `${value}%`);
+        input.setAttribute('aria-valuetext', `${Number(value.toFixed(2))}%`);
         group.style.setProperty('--bili-yt-level', String(value / 100));
       };
       const setVolume = () => {
@@ -527,12 +527,14 @@
       };
       input.addEventListener('input', setVolume);
       group.addEventListener('wheel', event => {
-        if (event.ctrlKey || event.shiftKey || !event.deltaY || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+        const scale = event.deltaMode === 1 ? 5 / 3 : event.deltaMode === 2 ? 5 : 0.05;
+        const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : -event.deltaY;
+        if (event.ctrlKey || event.shiftKey || !delta) return;
         sync();
         if (input.disabled) return;
         event.preventDefault();
         event.stopImmediatePropagation();
-        input.value = String(Math.max(0, Math.min(100, input.valueAsNumber - Math.sign(event.deltaY) * 5)));
+        input.value = String(Math.max(0, Math.min(100, input.valueAsNumber + delta * scale)));
         setVolume();
       }, { capture: true, passive: false });
       // 原生按鈕會把極低音量當成零；以 muted 切換，保留未捨入的音量。

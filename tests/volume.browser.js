@@ -33,14 +33,16 @@ async function selfTest(source) {
     await settle();
     let group = root.querySelector('.bili-yt-volume');
     let input = group?.querySelector('input');
+    const at = expected => Math.abs(input.valueAsNumber - expected) < 1e-8;
+    const gainAt = expected => Math.abs(video.volume - expected) < 1e-12;
     check(!!group, 'Late player mounts automatically');
     check(group.nextElementSibling.className === 'bpx-player-ctrl-time', 'Volume is before time');
     check(group.firstElementChild === originalButton, 'Original mute button is preserved');
-    check(input.value === '50' && video.volume === 0.125, 'Initial gain maps to perceptual position without changing audio');
+    check(at(50) && gainAt(.125), 'Initial gain maps to perceptual position without changing audio');
     check(win.getComputedStyle(originalButton.querySelector('.bpx-player-ctrl-volume-box')).display === 'none', 'Vertical popup is hidden');
     input.value = '50';
     input.dispatchEvent(new win.Event('input', { bubbles: true }));
-    check(video.volume === 0.125, 'Midpoint gives 12.5% gain');
+    check(gainAt(.125), 'Midpoint gives 12.5% gain');
     let previous = -1;
     const wheel = (target, deltaY, extra = {}) => {
       const event = new win.WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY, ...extra });
@@ -48,40 +50,88 @@ async function selfTest(source) {
       return event;
     };
     let event = wheel(originalButton, -100);
-    check(input.value === '55' && Math.abs(video.volume - .55 ** 3) < 1e-12, 'Wheel up on speaker uses five perceptual points');
+    check(at(55) && Math.abs(video.volume - .55 ** 3) < 1e-12, 'Wheel up on speaker uses five perceptual points');
     check(event.defaultPrevented && nativeWheels === 0 && playerWheels === 0, 'Volume wheel prevents page scroll and native double adjustment');
     wheel(input, 100);
-    check(input.value === '50' && video.volume === .125, 'Wheel down on slider uses the same curve');
+    check(at(50) && gainAt(.125), 'Wheel down on slider uses the same curve');
     wheel(originalButton.querySelector('span'), -3, { deltaMode: 1 });
-    check(input.value === '55', 'Line-mode wheel on nested speaker content works');
+    check(at(55), 'Line-mode wheel on nested speaker content works');
     wheel(input, 1, { deltaMode: 2 });
-    check(input.value === '50', 'Page-mode wheel has the same bounded step');
-    for (const extra of [{ctrlKey:true}, {shiftKey:true}, {deltaX:200}]) {
+    check(at(50), 'Page-mode wheel has the same bounded step');
+    for (const extra of [{ctrlKey:true}, {shiftKey:true}]) {
       event = wheel(input, 100, extra);
-      check(!event.defaultPrevented && input.value === '50', 'Zoom or horizontal wheel remains available: ' + JSON.stringify(extra));
+      check(!event.defaultPrevented && at(50), 'Modified wheel remains available: ' + JSON.stringify(extra));
     }
     event = wheel(input, 0);
-    check(!event.defaultPrevented && input.value === '50', 'Zero vertical delta does nothing');
+    check(!event.defaultPrevented && at(50), 'Zero vertical delta does nothing');
     event = wheel(root.querySelector('.bpx-player-ctrl-time'), 100);
-    check(!event.defaultPrevented && input.value === '50', 'Wheel outside volume controls remains untouched');
+    check(!event.defaultPrevented && at(50), 'Wheel outside volume controls remains untouched');
     input.value = '98'; input.dispatchEvent(new win.Event('input'));
     wheel(input, -100); event = wheel(input, -100);
-    check(video.volume === 1 && input.value === '100' && event.defaultPrevented, 'Maximum clamps and still blocks page scroll');
+    check(video.volume === 1 && at(100) && event.defaultPrevented, 'Maximum clamps and still blocks page scroll');
     input.value = '2'; input.dispatchEvent(new win.Event('input'));
     wheel(originalButton, 100); event = wheel(originalButton, 100);
-    check(video.volume === 0 && input.value === '0' && event.defaultPrevented, 'Minimum clamps without scrolling the page');
+    check(video.volume === 0 && at(0) && event.defaultPrevented, 'Minimum clamps without scrolling the page');
     input.value = '30'; input.dispatchEvent(new win.Event('input'));
     video.muted = true;
     wheel(input, 100);
-    check(video.muted && input.value === '0', 'Downward wheel does not unmute');
+    check(video.muted && at(0), 'Downward wheel does not unmute');
     originalButton.click();
     check(!video.muted && Math.abs(video.volume - .027) < 1e-12, 'Muted downward wheel preserves the volume restored by the speaker');
     video.muted = true;
     wheel(originalButton, -100);
-    check(!video.muted && input.value === '5' && Math.abs(video.volume - .05 ** 3) < 1e-12, 'Upward wheel from mute starts at five perceptual points');
+    check(!video.muted && at(5) && Math.abs(video.volume - .05 ** 3) < 1e-12, 'Upward wheel from mute starts at five perceptual points');
     input.value = '0'; input.dispatchEvent(new win.Event('input'));
     for (let i = 0; i < 10; i++) wheel(originalButton, -100);
-    check(input.value === '50' && video.volume === .125, 'Rapid wheel events accumulate exactly once each');
+    check(at(50) && gainAt(.125), 'Rapid wheel events accumulate exactly once each');
+    check(input.step === 'any', 'The slider accepts continuous fractional positions');
+    wheel(input, -.25);
+    check(at(50.0125) && gainAt(.500125 ** 3), 'A subpixel trackpad delta changes gain immediately without a five-point jump');
+    check(Math.abs(Number(group.style.getPropertyValue('--bili-yt-level')) - .500125) < 1e-10, 'The visible rail retains the fractional position');
+    await settle();
+    check(at(50.0125), 'Periodic synchronization preserves the fine position');
+    input.value = '50'; input.dispatchEvent(new win.Event('input'));
+    for (let i = 0; i < 100; i++) wheel(input, -.1);
+    check(at(50.5), 'One hundred small deltas accumulate without integer rounding');
+    const manySmall = video.volume;
+    input.value = '50'; input.dispatchEvent(new win.Event('input'));
+    wheel(input, -10);
+    check(Math.abs(video.volume - manySmall) < 1e-12, 'Equal travel produces equal gain regardless of event count');
+    wheel(input, 10);
+    check(at(50), 'Reversing travel returns to the starting gain');
+    event = wheel(input, 0, {deltaX:10});
+    check(at(50.5) && event.defaultPrevented, 'Horizontal two-finger travel to the right increases volume');
+    wheel(input, 0, {deltaX:-10});
+    check(at(50), 'Horizontal two-finger travel to the left decreases volume');
+    wheel(input, 2, {deltaX:10});
+    check(at(50.5), 'Diagonal travel uses the dominant horizontal axis once');
+    wheel(input, 10, {deltaX:2});
+    check(at(50), 'Diagonal travel uses the dominant vertical axis once');
+    for (const extra of [{ctrlKey:true}, {shiftKey:true}]) {
+      event = wheel(input, 0, {deltaX:10, ...extra});
+      check(!event.defaultPrevented && at(50), 'Modified horizontal gestures remain available: ' + JSON.stringify(extra));
+    }
+    wheel(input, -.3, {deltaMode:1});
+    check(at(50.5), 'Fractional line units are normalized');
+    wheel(input, .1, {deltaMode:2});
+    check(at(50), 'Fractional page units are normalized');
+    input.value = '12.3456789'; input.dispatchEvent(new win.Event('input'));
+    check(at(12.3456789) && gainAt(.123456789 ** 3), 'Direct range input retains fractional gain');
+    check(input.getAttribute('aria-valuetext') === '12.35%', 'Accessible text rounds independently of the actual gain');
+    video.volume = .375123 ** 3;
+    wheel(input, -1);
+    check(at(37.5623), 'Trackpad movement starts from exact external media gain');
+    video.muted = true;
+    wheel(input, -.25);
+    check(!video.muted && at(.0125) && video.volume > 0 && group.dataset.muted === 'false', 'Tiny upward movement from mute stays above zero');
+    wheel(input, -10000);
+    check(at(100) && video.volume === 1, 'Large gestures clamp at full volume');
+    wheel(input, .25);
+    check(at(99.9875), 'A small reversal responds immediately after the upper boundary');
+    wheel(input, 10000);
+    check(at(0) && video.volume === 0, 'Large gestures clamp at zero');
+    wheel(input, -.25);
+    check(at(.0125), 'A small reversal responds immediately after the lower boundary');
     video.remove();
     event = wheel(input, -100);
     check(!event.defaultPrevented && input.disabled, 'Missing media does not trap wheel scrolling');
@@ -90,44 +140,44 @@ async function selfTest(source) {
       input.value = String(position);
       input.dispatchEvent(new win.Event('input', { bubbles: true }));
       const gain = video.volume;
-      check(gain >= 0 && gain <= 1 && gain > previous && Number(input.value) === position,
+      check(gain >= 0 && gain <= 1 && gain > previous && at(position),
         `Curve is bounded, increasing and reversible at ${position}%`);
       previous = gain;
     }
     check(video.volume === 1, 'Maximum remains full volume');
     input.value = '10';
     input.dispatchEvent(new win.Event('input', { bubbles: true }));
-    check(Math.abs(video.volume - 0.001) < 1e-12 && input.value === '10', 'Low gain does not round to mute');
+    check(Math.abs(video.volume - 0.001) < 1e-12 && at(10), 'Low gain does not round to mute');
     originalButton.click();
     await settle();
     check(video.muted && group.dataset.muted === 'true', 'Very low gain can be muted');
     originalButton.click();
     await settle();
-    check(!video.muted && Math.abs(video.volume - 0.001) < 1e-12 && input.value === '10' && group.dataset.muted === 'false',
+    check(!video.muted && Math.abs(video.volume - 0.001) < 1e-12 && at(10) && group.dataset.muted === 'false',
       'Unmuting restores exact low gain rather than native rounded memory');
     input.value = '0';
     input.dispatchEvent(new win.Event('input', { bubbles: true }));
     originalButton.click();
     await settle();
-    check(!video.muted && Math.abs(video.volume - 0.001) < 1e-12 && input.value === '10',
+    check(!video.muted && Math.abs(video.volume - 0.001) < 1e-12 && at(10),
       'Unmuting after dragging to zero also restores fine gain');
     originalButton.click();
     await settle();
-    check(input.value === '0', 'Native mute updates the slider');
+    check(at(0), 'Native mute updates the slider');
     input.value = '75';
     input.dispatchEvent(new win.Event('input', { bubbles: true }));
-    check(!video.muted && video.volume === 0.421875, 'Raising the slider unmutes with the curve');
+    check(!video.muted && gainAt(.421875), 'Raising the slider unmutes with the curve');
     video.volume = 0.008;
     await settle();
-    check(input.value === '20', 'External low volume uses the inverse curve');
+    check(at(20), 'External low volume uses the inverse curve');
     const replacement = doc.createElement('video');
     replacement.volume = 0.064;
     video.replaceWith(replacement);
     video = replacement;
     await settle();
-    check(input.value === '40', 'Media replacement synchronizes');
+    check(at(40), 'Media replacement synchronizes');
     wheel(input, -100);
-    check(input.value === '45' && Math.abs(video.volume - .45 ** 3) < 1e-12, 'Wheel follows replacement media');
+    check(at(45) && Math.abs(video.volume - .45 ** 3) < 1e-12, 'Wheel follows replacement media');
     root.innerHTML = '<video></video>' + controls;
     await settle();
     group = root.querySelector('.bili-yt-volume');
@@ -137,7 +187,7 @@ async function selfTest(source) {
     input.dispatchEvent(new win.Event('input', { bubbles: true }));
     check(root.querySelector('video').volume === 0, 'Rebuilt slider controls new media');
     wheel(group.firstElementChild, -100);
-    check(input.value === '5' && Math.abs(root.querySelector('video').volume - .05 ** 3) < 1e-12, 'Rebuilt controls receive one wheel handler');
+    check(at(5) && Math.abs(root.querySelector('video').volume - .05 ** 3) < 1e-12, 'Rebuilt controls receive one wheel handler');
     input.value = '0'; input.dispatchEvent(new win.Event('input'));
     const second = doc.createElement('div');
     second.className = 'bpx-player-container';
@@ -146,9 +196,9 @@ async function selfTest(source) {
     await settle();
     second.querySelector('video').volume = 0.027;
     await settle();
-    check(second.querySelector('input').value === '30' && input.value === '0', 'Multiple players stay independent');
+    check(Math.abs(second.querySelector('input').valueAsNumber - 30) < 1e-8 && at(0), 'Multiple players stay independent');
     wheel(second.querySelector('.bili-yt-volume-input'), -100);
-    check(second.querySelector('input').value === '35' && input.value === '0', 'Wheel only changes its own player');
+    check(Math.abs(second.querySelector('input').valueAsNumber - 35) < 1e-8 && at(0), 'Wheel only changes its own player');
     return passed;
   } finally {
     frame.remove();
