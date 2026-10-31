@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili YouTube 樣式音量條
 // @namespace    local.bilibili-youtube-volume
-// @version      1.4.1
+// @version      1.4.2
 // @description  將音量移到左側，向右展開加長音量條，支援滾輪、觸控板雙指無級調整與聽感刻度，附音量平衡。
 // @match        https://www.bilibili.com/*
 // @match        https://player.bilibili.com/*
@@ -18,7 +18,7 @@
 (() => {
   'use strict';
   if (window.__biliYtVolumeVersion) return;
-  window.__biliYtVolumeVersion = '1.4.1';
+  window.__biliYtVolumeVersion = '1.4.2';
   // The processor runs on the audio thread, including when the tab is in the background.
   function balanceModule() {
     class BalanceProcessor extends AudioWorkletProcessor {
@@ -338,7 +338,7 @@
       const name = `bili-yt-balance-default-${++balanceSettingId}`;
       row.innerHTML = `<div class="bili-yt-default-title">開啟音量平衡</div>
         <div class="bui bui-radio bui-dark"><div class="bui-area"><div class="bui-radio-wrap bui-radio-button"><div class="bui-radio-group">
-          <label class="bui-radio-item"><input type="radio" class="bui-radio-input" name="${name}" value="all" aria-label="所有視頻"><span class="bui-radio-label"><span class="bui-radio-text">所有視頻</span></span></label>
+          <label class="bui-radio-item"><input type="radio" class="bui-radio-input" name="${name}" value="all" aria-label="所有影片"><span class="bui-radio-label"><span class="bui-radio-text">所有影片</span></span></label>
           <label class="bui-radio-item"><input type="radio" class="bui-radio-input" name="${name}" value="except-music" aria-label="除了音樂分區"><span class="bui-radio-label"><span class="bui-radio-text">除了音樂分區</span></span></label>
           <label class="bui-radio-item"><input type="radio" class="bui-radio-input" name="${name}" value="off" aria-label="關閉"><span class="bui-radio-label"><span class="bui-radio-text">關閉</span></span></label>
         </div></div></div></div>`;
