@@ -21,11 +21,17 @@ Load the userscript text as `source` in the page's developer console, for exampl
 | File | Invocation | Checks |
 | --- | --- | --- |
 | `volume.browser.js` | `await selfTest(source)` | 176 volume, mute, wheel/trackpad, rebuild and multiple-player assertions |
+| `collection.browser.js` | `await collectionTest(source)` | 19 collection/multipart-navigation, late-button, rebuild, chapter and responsive-rail assertions |
+| `layout.browser.js` | `await layoutTest(source)` | 19 dense themed-bar, single-row, chapter-icon, control-width and original-handler assertions |
 | `features.browser.js` | `await featureTest(source)` | 24 settings and audio-integration assertions |
 | `theme.browser.js` | `await themeTest(source)` | 14 native-style, theme-variable and toggle assertions |
 
-The first two suites create and remove isolated iframes. The audio integration suite uses muted local WAV data, temporarily changes the script's preferences, restores saved preferences in `finally`, and closes its test audio contexts. A real page gesture may be needed before running it because of autoplay restrictions. The volume suite takes approximately 14 seconds. It includes fractional deltas, horizontal and vertical travel, pixel/line/page units, event-frequency independence, Mac natural-scrolling fallback and explicit inversion flags, exact external gain synchronization, and immediate reversal at either endpoint.
+The volume, collection and audio-integration suites create and remove isolated iframes. The audio integration suite uses muted local WAV data, temporarily changes the script's preferences, restores saved preferences in `finally`, and closes its test audio contexts. A real page gesture may be needed before running it because of autoplay restrictions. The volume suite takes approximately 14 seconds. It includes fractional deltas, horizontal and vertical travel, pixel/line/page units, event-frequency independence, Mac natural-scrolling fallback and explicit inversion flags, exact external gain synchronization, and immediate reversal at either endpoint.
 
 The theme suite requires the script's stylesheet and Bilibili's native autoplay switch to exist. It temporarily replaces the script's CSS, compares a new switch to a native clone under three accent colors, checks label/track activation and status indicators, then restores the stylesheet and removes its fixture. Run it on the site's existing theme; it does not modify theme preferences.
 
 Fixture success does not prove userscript-manager injection timing, physical mouse/trackpad behavior, every third-party theme, or subjective listening quality. Also review real playback, seek/navigation, native audio effects, keyboard interaction, and ordinary/fullscreen layouts when changing those behaviors.
+
+The collection suite reproduces a collection/multipart next button inserted after the volume control mounts. It checks native node/listener preservation, full navigation-button widths, responsive rail/input alignment, both slider endpoints, reconstruction at narrow and wide player sizes, and flexible chapter controls.
+
+The layout suite models the native bar plus Bewly screenshot/widescreen and theater controls. It checks collapsed/expanded volume and 668, 720, 800, 801, 906 and 1440px player widths. Layout fixtures disable the rail transition to measure its final geometry deterministically; live hover animation and physical inputs require separate browser/device checks.
