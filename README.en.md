@@ -38,7 +38,7 @@ The **音量平衡** (Volume balance) switch on the first player settings panel 
 
 | Displayed option | Behavior |
 | --- | --- |
-| 所有視頻 | Enable by default for all categories |
+| 所有影片 | Enable by default for all categories |
 | 除了音樂分區 | **Initial default:** disable for music and enable elsewhere; stay off when the category is unknown |
 | 關閉 | Disable by default for all categories |
 
