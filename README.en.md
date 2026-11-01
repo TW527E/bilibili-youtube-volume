@@ -4,7 +4,7 @@
 
 A userscript that moves Bilibili's volume control to the left and reveals a horizontal slider to its right on hover. Includes wheel and continuous two-finger trackpad adjustment, fine control at low volumes, and optional volume balancing.
 
-**Current version: 1.4.1** · [Install script](https://raw.githubusercontent.com/TW527E/bilibili-youtube-volume/main/bilibili-youtube-volume.user.js) · [Report an issue](https://github.com/TW527E/bilibili-youtube-volume/issues)
+**Current version: 1.4.3** · [Install script](https://raw.githubusercontent.com/TW527E/bilibili-youtube-volume/main/bilibili-youtube-volume.user.js) · [Report an issue](https://github.com/TW527E/bilibili-youtube-volume/issues)
 
 ## Install and update
 
@@ -20,11 +20,13 @@ If the link displays source code, create a script in your manager, paste the ent
 
 | Action | Result |
 | --- | --- |
-| Hover over the volume icon on the left | Reveals a 108px slider between the play button and the time display |
+| Hover over the volume icon on the left | Reveals a slider after play/previous/next and before the time display; up to 108px, shortening in narrow players to preserve collection/multipart navigation controls |
 | Drag the slider | Uses a cubic approximation to a perceptual scale; 50% corresponds to 12.5% media gain |
 | Scroll or use two fingers over the icon or slider | Right/up increases and left/down decreases volume continuously in proportion to travel |
 | Click the volume icon | Mutes or restores sound while retaining precise low-volume settings |
 | Focus the slider with the keyboard | Uses the native range input's arrow keys, Home, and End |
+
+At player widths of 800px or less, buttons and spacing become more compact and chapters use an icon, keeping volume and the other controls on one row. Wider players restore native sizes.
 
 Fractional trackpad deltas move both the slider and gain continuously instead of jumping 5% per event. Equal total travel produces the same adjustment even when split into many tiny events. Direction correction uses the browser’s natural-scrolling inversion flag when available. Without that flag, pixel scrolling on Mac assumes the default natural-scrolling setting. If natural scrolling is disabled on Mac and the browser exposes no flag, direction may still need calibration.
 

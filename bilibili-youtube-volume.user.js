@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili YouTube 樣式音量條
 // @namespace    local.bilibili-youtube-volume
-// @version      1.4.2
+// @version      1.4.3
 // @description  將音量移到左側，向右展開加長音量條，支援滾輪、觸控板雙指無級調整與聽感刻度，附音量平衡。
 // @match        https://www.bilibili.com/*
 // @match        https://player.bilibili.com/*
@@ -18,7 +18,7 @@
 (() => {
   'use strict';
   if (window.__biliYtVolumeVersion) return;
-  window.__biliYtVolumeVersion = '1.4.2';
+  window.__biliYtVolumeVersion = '1.4.3';
   // The processor runs on the audio thread, including when the tab is in the background.
   function balanceModule() {
     class BalanceProcessor extends AudioWorkletProcessor {
@@ -414,9 +414,27 @@
     .bili-yt-setting[data-status='pending'] .bui-switch-name::after { content: ' · 待播放'; opacity: .65; }
     .bili-yt-setting[data-status='error'] .bui-switch-name::after { content: ' · 無法啟用'; opacity: .65; }
     .bili-yt-volume {
-      display: inline-flex; align-items: center; flex: 0 0 auto;
+      display: inline-flex; align-items: center; flex: 0 1 auto; min-width: 36px;
       align-self: flex-start; direction: ltr;
       --bili-yt-level: 0;
+    }
+    .bpx-player-control-bottom:has(.bili-yt-volume) { container: bili-volume-controls / inline-size; }
+    .bpx-player-control-bottom-left:has(> .bili-yt-volume) { flex: 1 1 0%; min-width: 0; }
+    .bpx-player-control-bottom-left:has(> .bili-yt-volume) > :is(.bpx-player-ctrl-play, .bpx-player-ctrl-prev, .bpx-player-ctrl-next, .bpx-player-ctrl-time) { flex-shrink: 0; }
+    .bpx-player-control-bottom:has(.bili-yt-volume) > .bpx-player-control-bottom-right { flex-shrink: 0; }
+    @container bili-volume-controls (max-width: 800px) {
+      .bpx-player-control-bottom-left:has(> .bili-yt-volume) > .bpx-player-ctrl-viewpoint {
+        flex: 0 0 28px; min-width: 28px; max-width: 28px; margin: 0;
+      }
+      .bpx-player-control-bottom-left:has(> .bili-yt-volume) .bpx-player-ctrl-viewpoint-text {
+        position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+      }
+      .bpx-player-control-bottom:has(.bili-yt-volume) > .bpx-player-control-bottom-right > .bpx-player-ctrl-btn {
+        width: 28px; min-width: 28px; max-width: 28px; flex-shrink: 0;
+      }
+      .bpx-player-control-bottom:has(.bili-yt-volume) > .bpx-player-control-bottom-right > .bpx-player-ctrl-quality { width: auto; max-width: none; margin-right: 0; }
+      .bpx-player-control-bottom:has(.bili-yt-volume) > .bpx-player-control-bottom-right > .bpx-player-ctrl-playbackrate { width: 36px; max-width: 36px; }
+      .bpx-player-control-bottom:has(.bili-yt-volume) > .bpx-player-control-bottom-right > .bpx-player-ctrl-subtitle { margin: 0; }
     }
     .bili-yt-volume > .bpx-player-ctrl-volume {
       flex: 0 0 auto; height: auto !important; margin: 0 !important; padding: 0 !important;
@@ -427,7 +445,7 @@
     .bili-yt-volume[data-muted="false"] .bpx-player-ctrl-volume-icon,
     .bili-yt-volume[data-muted="true"] .bpx-player-ctrl-muted-icon { display: block !important; }
     .bili-yt-volume-rail {
-      position: relative; display: block; flex: 0 0 auto;
+      position: relative; display: block; flex: 0 1 auto; min-width: 0;
       width: 0; height: 22px; overflow: hidden; opacity: 0;
       transition: width 180ms ease, opacity 180ms ease;
     }
@@ -439,14 +457,14 @@
       content: ''; position: absolute; left: 12px; top: calc(50% - 1.5px);
       height: 3px; border-radius: 0; pointer-events: none;
     }
-    .bili-yt-volume-rail::before { width: 108px; background: #ffffff59; }
+    .bili-yt-volume-rail::before { width: calc(100% - 24px); background: #ffffff59; }
     .bili-yt-volume-rail::after {
-      width: calc(108px * var(--bili-yt-level)); background: #fff;
+      width: calc((100% - 24px) * var(--bili-yt-level)); background: #fff;
     }
     .bili-yt-volume-input {
       appearance: none !important; -webkit-appearance: none !important;
       position: relative; display: block; box-sizing: border-box;
-      width: 120px !important; height: 22px !important; margin: 0 6px !important;
+      width: calc(100% - 12px) !important; height: 22px !important; margin: 0 6px !important;
       padding: 0 !important; border: 0 !important; border-radius: 0;
       background: transparent !important; cursor: pointer; direction: ltr;
       touch-action: pan-y;
@@ -571,8 +589,9 @@
       players.set(root, state);
     }
     if (button.parentElement !== state.group) state.group.prepend(button);
-    if (state.group.parentElement !== left) {
-      left.insertBefore(state.group, left.querySelector('.bpx-player-ctrl-time'));
+    const time = left.querySelector('.bpx-player-ctrl-time');
+    if (state.group.parentElement !== left || (time && state.group.nextElementSibling !== time)) {
+      left.insertBefore(state.group, time);
     }
     state.sync();
   }
@@ -597,7 +616,7 @@
   }, { capture: true, passive: true });
   window.addEventListener('pagehide', () => clearInterval(poll));
   window.addEventListener('pageshow', event => { if (event.persisted) { poll = setInterval(scan, 1000); scan(); } });
-  const relevant = '.bpx-player-container, .bpx-player-control-bottom-left, .bpx-player-ctrl-volume, .bpx-player-ctrl-setting-menu-left, .bpx-player-ctrl-setting-menu-right, video, bwp-video';
+  const relevant = '.bpx-player-container, .bpx-player-control-bottom-left, .bpx-player-ctrl-volume, .bpx-player-ctrl-prev, .bpx-player-ctrl-next, .bpx-player-ctrl-time, .bpx-player-ctrl-setting-menu-left, .bpx-player-ctrl-setting-menu-right, video, bwp-video';
   let scheduled = false;
   new MutationObserver(records => {
     if (scheduled || !records.some(record => [...record.addedNodes].some(node =>
