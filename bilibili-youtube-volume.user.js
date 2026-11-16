@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili YouTube 樣式音量條
 // @namespace    local.bilibili-youtube-volume
-// @version      1.4.3
+// @version      1.4.4
 // @description  將音量移到左側，向右展開加長音量條，支援滾輪、觸控板雙指無級調整與聽感刻度，附音量平衡。
 // @match        https://www.bilibili.com/*
 // @match        https://player.bilibili.com/*
@@ -41,6 +41,12 @@
         const volume = parameters.volume[0], enabled = parameters.enabled[0] > 0.5;
         const frames = output[0].length;
         if (volume === 0) {
+          // Switched off (for example a context shared by two players): pass the input through.
+          // Another video in this context must not go silent because this one is muted.
+          if (!enabled && this.mix === 0) {
+            output.forEach((channel, ch) => channel.set(input[Math.min(ch, input.length - 1)]));
+            return true;
+          }
           output.forEach(channel => channel.fill(0));
           this.power = 0;
           this.gain = this.compression = 1;
@@ -143,6 +149,16 @@
     };
   }
 
+  function blockedMedia(video) {
+    if (!(video instanceof HTMLMediaElement) || !video.currentSrc || video.readyState < 2) return false;
+    try {
+      const url = new URL(video.currentSrc, location.href);
+      return url.origin !== location.origin && !video.crossOrigin;
+    } catch {
+      return false;
+    }
+  }
+
   function safeMedia(video) {
     if (!(video instanceof HTMLMediaElement) || !video.currentSrc || video.readyState < 2) return false;
     try {
@@ -231,6 +247,8 @@
     if (!entry && enabled && safeMedia(video) && originalCreate) {
       entry = captureAudio(new AudioContext(), video, null, true);
     }
+    // Loaded and cross-origin without CORS: it can never be attached, so say so instead of "pending".
+    if (!entry && enabled && blockedMedia(video)) return '此影片的音訊來源受跨來源限制，無法啟用音量平衡';
     if (!entry) return '';
     if (entry.source && video.isConnected && !video.paused) resumeAudio(video);
     if (entry.context.state === 'closed') entry.error = '音訊通道已關閉，請重新載入影片';
